@@ -1,6 +1,14 @@
 from flask import Flask, request, redirect
 
+from User import User
+from UserList import UserList
+
 app = Flask(__name__)
+userList = UserList()
+userList.add_user(User("1", "1", False, True, 0, 30))
+userList.add_user(User("12", "12", False, True, 0, 30))
+userList.add_user(User("123", "123", False, True, 0, 30))
+userList.add_user(User("1234", "1234", False, True, 0, 30))
 
 
 def head_html(title):
@@ -25,7 +33,6 @@ def index():
                         <h1>Система учёта пользователей</h1>
                         <br>
                         <a class="btn btn-primary" href="log_in">Войти</a>
-                        
                     </div>
                 </body>
             </html>"""
@@ -60,11 +67,50 @@ def log_in():
 
 @app.route("/admin")
 def admin():
+
+    table = """
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">First</th>
+                        <th scope="col">Last</th>
+                        <th scope="col">Handle</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th scope="row">1</th>
+                        <td>Mark</td>
+                        <td>Otto</td>
+                        <td>@mdo</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">2</th>
+                        <td>Jacob</td>
+                        <td>Thornton</td>
+                        <td>@fat</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">3</th>
+                        <td colspan="2">Larry the Bird</td>
+                        <td>@twitter</td>
+                    </tr>
+                </tbody>
+            </table>
+"""
     return f"""<!DOCTYPE html>
             <html>
                 {head_html("Административный интерфейс")}
                 <body>
-                    <h1>Админский аккаунт</h1>
+                    <div class="container mt-5">
+                        <h1>Админский аккаунт</h1>
+                        <a class="btn btn-primary" href="/">Сменить пароль</a>
+                        <br>
+                        <h3>Пользователи:</h3>
+                        <br>
+                        {table}
+                    </div>
                 </body>
             </html>"""
 
