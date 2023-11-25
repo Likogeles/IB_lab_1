@@ -110,6 +110,7 @@ def admin():
                         <h3>Пользователи:</h3>
                         <br>
                         {table}
+                        
                     </div>
                 </body>
             </html>"""
