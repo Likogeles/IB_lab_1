@@ -9,6 +9,7 @@ userList = UserList()
 
 pattern = r'(?:\d[^\d]+)*\d(?:[^\d]+\d)*'
 
+userList.add_user(User("ADMIN", "1@ya.ru", "", False, True, 0, 30))
 userList.add_user(User("1", "1@ya.ru", "1", False, True, 0, 30))
 userList.add_user(User("12", "12@ya.ru", "12", False, True, 0, 30))
 userList.add_user(User("123", "123@ya.ru", "123", False, True, 0, 30))
@@ -71,22 +72,60 @@ def log_in():
 
 @app.route("/change_password", methods=["POST", "GET"])
 def change_password():
+
+    change_errors = []
+    if request.method == "POST":
+        arg_user = request.args.get("user")
+        if arg_user:
+            errors_flag = True
+            user = userList.get_user_by_login(arg_user)
+            old_password_form = request.form['old_password_form']
+            new_password_form = request.form['new_password_form']
+            second_new_password_form = request.form['second_new_password_form']
+
+            if User.hash_password(old_password_form) != user.get_password():
+                change_errors.append("Старый пароль введён неверно")
+                errors_flag = False
+            if new_password_form != second_new_password_form:
+                change_errors.append("Новые пароли не совпадают")
+                errors_flag = False
+            if user.get_is_password_limited():
+                if not re.fullmatch(pattern, new_password_form):
+                    change_errors.append(
+                        "Пароль не удовлетворяет условию: Чередование цифр, знаков препинания и снова цифр.")
+                    errors_flag = False
+
+            if errors_flag:
+                user.set_password(new_password_form)
+                if user.get_login() == "ADMIN":
+                    return redirect("/admin")
+                else:
+                    return redirect("/")
+
+    error_message = ""
+    if len(change_errors) != 0:
+        error_message = '<div class="alert alert-danger" role="alert"><ul class="errors">'
+        for i in change_errors:
+            error_message += f"<li>{i}</li>"
+        error_message += "</ul></div>"
+
     return f"""<!DOCTYPE html>
             <html>
                 {head_html("Изменить пароль")}
                 <body>
                     <div class="container mt-5">
-                        <h1>Вход в аккаунт</h1>
+                        <h1>Изменение пароля</h1>
                         <br>
                         <form method="POST">
+                            {error_message}
                             <h4>Старый пароль</h4>
-                            <input type="password" name="password_form" id="password_form" class="form-control"  placeholder="Старый пароль">
+                            <input type="password" name="old_password_form" id="old_password_form" class="form-control" placeholder="Старый пароль">
                             <br>
                             <h4>Новый пароль</h4>
-                            <input type="password" name="password_form" id="password_form" class="form-control"  placeholder="Новый пароль">
+                            <input type="password" name="new_password_form" id="new_password_form" class="form-control" placeholder="Новый пароль">
                             <br>
                             <h4>Повторите новый пароль</h4>
-                            <input type="password" name="password_form" id="password_form" class="form-control"  placeholder="Повторите новый пароль">
+                            <input type="password" name="second_new_password_form" id="second_new_password_form" class="form-control" placeholder="Повторите новый пароль">
                             <br>
                             <input type="submit" class="btn btn-success" value="Сохранить">
                             <br>
@@ -286,7 +325,7 @@ def admin():
                 <body>
                     <div class="container mt-5">
                         <h1>Административный интерфейс</h1>
-                        <a class="btn btn-primary" href="/">Сменить пароль</a>
+                        <a class="btn btn-primary" href="/change_password?user=ADMIN">Сменить пароль</a>
                         <br>
                         <br>
                         <a class="btn btn-primary" href="/edit">Добавить пользователя</a>
