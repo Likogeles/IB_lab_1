@@ -45,11 +45,39 @@ def index():
 
 @app.route("/log_in", methods=["POST", "GET"])
 def log_in():
+    login_errors = []
     if request.method == "POST":
         login_form = request.form['login_form']
         password_form = request.form['password_form']
-        if login_form == "ADMIN":
-            return redirect("/admin")
+
+        errors_flag = True
+
+        if login_form not in [user.get_login() for user in userList.get_all_users()]:
+            login_errors.append("Пользователя с таким логином не существует")
+            errors_flag = False
+        else:
+            user = userList.get_user_by_login(login_form)
+            if user.get_password() != User.hash_password(password_form):
+                login_errors.append("Неверный пароль")
+                errors_flag = False
+            else:
+                if user.get_is_blocked():
+                    login_errors.append("Пользователь заблокирован")
+                    errors_flag = False
+
+        if errors_flag:
+            if login_form == "ADMIN":
+                return redirect("/admin")
+            else:
+                return redirect(f"/user?user={login_form}")
+
+    error_message = ""
+    if len(login_errors) != 0:
+        error_message = '<div class="alert alert-danger" role="alert"><ul class="errors">'
+        for i in login_errors:
+            error_message += f"<li>{i}</li>"
+        error_message += "</ul></div>"
+
     return f"""<!DOCTYPE html>
             <html>
                 {head_html("Вход")}
@@ -57,6 +85,7 @@ def log_in():
                     <div class="container mt-5">
                         <h1>Вход в аккаунт</h1>
                         <br>
+                        {error_message}
                         <form method="POST">
                             <input type="text" name="login_form" id="login_form" class="form-control" placeholder="Введите логин">
                             <br>
@@ -100,7 +129,7 @@ def change_password():
                 if user.get_login() == "ADMIN":
                     return redirect("/admin")
                 else:
-                    return redirect("/")
+                    return redirect(f"/user?user={arg_user}")
 
     error_message = ""
     if len(change_errors) != 0:
@@ -130,6 +159,30 @@ def change_password():
                             <input type="submit" class="btn btn-success" value="Сохранить">
                             <br>
                         </form>
+                    </div>
+                </body>
+            </html>"""
+
+
+@app.route("/user")
+def user():
+    arg_user = request.args.get("user")
+
+    if arg_user is None:
+        return redirect("/")
+
+    return f"""<!DOCTYPE html>
+            <html>
+                {head_html("Пользовательский интерфейс")}
+                <body>
+                    <div class="container mt-5">
+                        <h1>Пользовательский интерфейс</h1>
+                        <a class="btn btn-primary" href="/change_password?user={arg_user}">Сменить пароль</a>
+                        <br>
+                        <br>
+                        <br>
+                        <br>
+                        <br>
                     </div>
                 </body>
             </html>"""
