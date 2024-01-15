@@ -17,16 +17,11 @@ class User:
         self._password_time = password_time
 
     @classmethod
-    def new_user(self, login: str, email: str, password: str, password_time: int):
-        self.login = login
-        self._email = email
-        # Тут нужно захешировать пароль
+    def new_user(cls, login: str, email: str, password: str, is_blocked: bool, is_password_limited: bool, min_password_len: int, password_time: int):
+        # # Тут нужно захешировать пароль
         hash_password = password
-        self._password = hash_password
-        self._is_blocked = False
-        self._is_password_limited = True
-        self._min_password_len = 0
-        self._password_time = password_time
+        new_user = cls(login, email, hash_password, False, is_password_limited, min_password_len, password_time)
+        return new_user
 
     def get_login(self) -> str:
         return self._login
@@ -40,8 +35,14 @@ class User:
     def get_is_blocked(self) -> bool:
         return self._is_blocked
 
+    def set_is_blocked(self, is_blocked: bool):
+        self._is_blocked = is_blocked
+
     def get_is_password_limited(self) -> bool:
         return self._is_password_limited
+
+    def set_is_password_limited(self, is_password_limited: bool):
+        self._is_password_limited = is_password_limited
 
     def get_min_password_len(self) -> int:
         return self._min_password_len
