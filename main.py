@@ -1,4 +1,5 @@
 import sys
+from datetime import datetime
 
 from flask import Flask, request, redirect
 import re
@@ -13,11 +14,15 @@ password_tries = 0
 
 pattern = r'(?:\d[^\d]+)*\d(?:[^\d]+\d)*'
 
-userList.add_user(User("ADMIN", "1@ya.ru", "", False, True, 0, 30))
-userList.add_user(User("1", "1@ya.ru", "1", False, True, 0, 30))
-userList.add_user(User("12", "12@ya.ru", "12", False, True, 0, 30))
-userList.add_user(User("123", "123@ya.ru", "123", False, True, 0, 30))
-userList.add_user(User("1234", "1234@ya.ru", "1234", False, True, 0, 30))
+userList.add_user(User("ADMIN", "1@ya.ru", "", False, True, 0, 0))
+userList.add_user(User("1", "1@ya.ru", "1", False, True, 0, 0))
+
+old_password_user = userList.get_user_by_login("1")
+old_password_user.set_last_password_edit(datetime(year=1970, month=1, day=1))
+
+userList.add_user(User("12", "12@ya.ru", "12", False, True, 0, 0))
+userList.add_user(User("123", "123@ya.ru", "123", False, True, 0, 0))
+userList.add_user(User("1234", "1234@ya.ru", "1234", False, True, 0, 0))
 
 # <meta charset="utf-8">
 # <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -120,8 +125,6 @@ def exitApp():
     return redirect("/")
 
 
-
-
 @app.route("/change_is_password_limited")
 def change_is_password_limited():
     user_login = request.args.get("user")
@@ -169,6 +172,11 @@ def log_in():
                 if user.get_is_blocked():
                     login_errors.append("Пользователь заблокирован")
                     errors_flag = False
+                else:
+                    if user.get_password_time() != 0:
+                        if (datetime.now() - user.get_last_password_edit()).days > user.get_password_time() * 30:
+                            login_errors.append("Срок действия пароля истёк")
+                            errors_flag = False
 
         if errors_flag:
             password_tries = 0
@@ -237,6 +245,7 @@ def set_password():
 
             if errors_flag:
                 user.set_password(new_password_form)
+                user.set_last_password_edit(datetime.now())
                 if user.get_login() == "ADMIN":
                     return redirect("/admin")
                 else:

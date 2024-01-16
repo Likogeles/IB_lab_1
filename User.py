@@ -1,3 +1,6 @@
+from datetime import datetime
+
+
 class User:
     _login: str = ""
     _email: str = ""
@@ -5,6 +8,7 @@ class User:
     _is_blocked: bool = False
     _is_password_limited: bool = True
     _min_password_len: int = 0
+    _last_password_edit: datetime = datetime.now()
     _password_time: int = 0
 
     @classmethod
@@ -57,3 +61,9 @@ class User:
 
     def get_password_time(self) -> int:
         return self._password_time
+
+    def set_last_password_edit(self, last_password_edit: datetime):
+        self._last_password_edit = last_password_edit
+
+    def get_last_password_edit(self) -> datetime:
+        return self._last_password_edit
