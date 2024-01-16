@@ -26,6 +26,11 @@ userList.add_user(User("1234", "1234@ya.ru", "1234", False, True, 0, 30))
 # <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
 
 
+@app.route("/drop")
+def drop():
+    sys.exit()
+
+
 def head_html(title):
     return f"""
             <head>
@@ -115,9 +120,6 @@ def exitApp():
     return redirect("/")
 
 
-@app.route("/drop")
-def drop():
-    sys.exit()
 
 
 @app.route("/change_is_password_limited")
