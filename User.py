@@ -1,3 +1,4 @@
+import hashlib
 from datetime import datetime
 
 
@@ -13,8 +14,13 @@ class User:
 
     @classmethod
     def hash_password(cls, password: str) -> str:
-        new_hash_password = password
-        return new_hash_password
+        new_hash_password = hashlib.md5(password.encode())
+        return new_hash_password.hexdigest()
+
+    def check_password(self, text: str) -> bool:
+        if self.hash_password(text) == self._password:
+            return True
+        return False
 
     def __init__(self, login: str, email: str, hash_password: str, is_blocked: bool, is_password_limited: bool, min_password_len: int, last_password_edit: datetime, password_time: int):
         self._login = login

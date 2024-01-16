@@ -44,7 +44,7 @@ class UserList:
 
     def load(self, secret_key: bytes):
         if not os.path.isfile(self.data_file_name):
-            self._userList.append(User("ADMIN", "Admin@ya.ru", "", False, True, 0, datetime.now(), 0))
+            self._userList.append(User.new_user("ADMIN", "Admin@ya.ru", "", False, True, 0, 0))
             text = "["
             for user in self._userList:
                 text += "{" + user.to_json() + "}"
@@ -58,23 +58,24 @@ class UserList:
             file_text = self.decrypt(f.read(), secret_key)
             json_arr = json.loads(file_text.replace('\\', '\\\\'))
             for i in json_arr:
-                is_blocked: bool = i['is_blocked']
-                is_password_limited: bool = i['is_password_limited']
-                min_password_len: int = i['min_password_len']
+                is_blocked: bool = i['is_blocked'] == "True"
+                is_password_limited: bool = i['is_password_limited'] == "True"
+                min_password_len: int = int(i['min_password_len'])
                 last_password_edit: datetime = datetime.strptime(i['last_password_edit'].split()[0], '%Y-%M-%d')
-                password_time: int = i['password_time']
+                password_time: int = int(i['password_time'])
                 self._userList.append(User(i['login'], i['email'], i['password'], is_blocked, is_password_limited, min_password_len, last_password_edit, password_time))
 
         with open(self.temp_file_name, 'w') as f:
             tmp_text = ""
             for i in self._userList:
-                tmp_text += "{" + i.to_json() + "}"
+                tmp_text += "{" + i.to_json() + "}\n"
             f.write(tmp_text)
 
     def save(self, secret_key):
         text = "["
         for user in self._userList:
-            text += "{" + user.to_json() + "}\n"
+            text += "{" + user.to_json() + "},"
+        text = text[:-1]
         text += "]"
         data = self.encrypt(text, secret_key)
 

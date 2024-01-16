@@ -165,7 +165,7 @@ def log_in():
             errors_flag = False
         else:
             user = userList.get_user_by_login(login_form)
-            if user.get_password() != User.hash_password(password_form):
+            if not user.check_password(password_form):
                 password_tries += 1
                 login_errors.append(f"Неверный пароль. Осталось попыток: {max_password_tries-password_tries}")
                 if password_tries >= max_password_tries:
@@ -183,7 +183,7 @@ def log_in():
 
         if errors_flag:
             password_tries = 0
-            if userList.get_user_by_login(login_form).get_password() == "":
+            if userList.get_user_by_login(login_form).get_password() == User.hash_password(""):
                 return redirect(f"/set_password?user={login_form}")
             if login_form == "ADMIN":
                 return redirect("/admin")
