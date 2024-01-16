@@ -1,6 +1,8 @@
+import os
 import sys
 from datetime import datetime
 
+from Cryptodome.Random import get_random_bytes
 from flask import Flask, request, redirect
 import re
 
@@ -11,28 +13,29 @@ app = Flask(__name__)
 userList = UserList()
 max_password_tries = 3
 password_tries = 0
+# secret_key = get_random_bytes(16)
+secret_key = b"asdfghjklzxcvbnm"
 
 pattern = r'(?:\d[^\d]+)*\d(?:[^\d]+\d)*'
 
-userList.add_user(User("ADMIN", "1@ya.ru", "", False, True, 0, 0))
-userList.add_user(User("1", "1@ya.ru", "1", False, True, 0, 0))
+userList.load(secret_key)
 
-old_password_user = userList.get_user_by_login("1")
-old_password_user.set_last_password_edit(datetime(year=1970, month=1, day=1))
-
-userList.add_user(User("12", "12@ya.ru", "12", False, True, 0, 0))
-userList.add_user(User("123", "123@ya.ru", "123", False, True, 0, 0))
-userList.add_user(User("1234", "1234@ya.ru", "1234", False, True, 0, 0))
-
-# <meta charset="utf-8">
-# <meta name="viewport" content="width=device-width, initial-scale=1">
-# <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
-
-# <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+# userList.add_user(User.new_user("ADMIN", "1@ya.ru", "", False, True, 0, 0))
+# userList.add_user(User.new_user("1", "1@ya.ru", "1", False, True, 0, 0))
+#
+# old_password_user = userList.get_user_by_login("1")
+# old_password_user.set_last_password_edit(datetime(year=1970, month=1, day=1))
+#
+# userList.add_user(User.new_user("12", "12@ya.ru", "12", False, True, 0, 0))
+# userList.add_user(User.new_user("123", "123@ya.ru", "123", False, True, 0, 0))
+# userList.add_user(User.new_user("1234", "1234@ya.ru", "1234", False, True, 0, 0))
 
 
 @app.route("/drop")
 def drop():
+    userList.save(secret_key)
+    if os.path.exists(userList.temp_file_name):
+        os.remove(userList.temp_file_name)
     sys.exit()
 
 
