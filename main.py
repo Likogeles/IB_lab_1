@@ -13,22 +13,21 @@ app = Flask(__name__)
 userList = UserList()
 max_password_tries = 3
 password_tries = 0
-# secret_key = get_random_bytes(16)
-secret_key = b"asdfghjklzxcvbnm"
-
 pattern = r'(?:\d[^\d]+)*\d(?:[^\d]+\d)*'
 
-userList.load(secret_key)
+secret_key = b"super_secret_key"
 
-# userList.add_user(User.new_user("ADMIN", "1@ya.ru", "", False, True, 0, 0))
-# userList.add_user(User.new_user("1", "1@ya.ru", "1", False, True, 0, 0))
-#
-# old_password_user = userList.get_user_by_login("1")
-# old_password_user.set_last_password_edit(datetime(year=1970, month=1, day=1))
-#
-# userList.add_user(User.new_user("12", "12@ya.ru", "12", False, True, 0, 0))
-# userList.add_user(User.new_user("123", "123@ya.ru", "123", False, True, 0, 0))
-# userList.add_user(User.new_user("1234", "1234@ya.ru", "1234", False, True, 0, 0))
+# userList.load(secret_key)
+
+if not os.path.isfile(userList.data_file_name):
+    userList.get_all_users().append(User.new_user("ADMIN", "Admin@ya.ru", "", False, True, 0, 0))
+    text = "["
+    for user in userList.get_all_users():
+        text += "{" + user.to_json() + "}"
+    text += "]"
+    data = userList.encrypt(text, secret_key)
+    with open(userList.data_file_name, 'w') as f:
+        f.write(data.decode())
 
 
 @app.route("/drop")
@@ -74,9 +73,31 @@ def nav_html():
             </nav>"""
 
 
-@app.route("/")
-@app.route("/home")
+@app.route("/", methods=["POST", "GET"])
 def index():
+    index_errors = []
+    errors_flag = True
+    if request.method == "POST":
+        password_frase_form = request.form['password_frase_form']
+        if password_frase_form == "":
+            index_errors.append("Введите парольную фразу")
+            errors_flag = False
+        else:
+            if not userList.frase_check(password_frase_form):
+                index_errors.append("Неверная парольная фраза")
+                errors_flag = False
+        if errors_flag:
+            userList.load(password_frase_form)
+            print(userList.get_all_users())
+            return redirect("/log_in")
+
+    error_message = ""
+    if len(index_errors) != 0:
+        error_message = '<div class="alert alert-danger" role="alert"><ul class="errors">'
+        for i in index_errors:
+            error_message += f"<li>{i}</li>"
+        error_message += "</ul></div>"
+
     return f"""<!DOCTYPE html>
             <html>
                 {head_html("Система учёта пользователей")}
@@ -84,10 +105,15 @@ def index():
                     <div class="container mt-5">
                         <h1>Система учёта пользователей</h1>
                         <br>
-                        <a class="btn btn-primary" href="/log_in">Войти</a>
+                        {error_message}
+                        <form method="POST">
+                            <input type="text" name="password_frase_form" id="password_frase_form" class="form-control" placeholder="Парольная фраза">
+                            <br>
+                            <input type="submit" class="btn btn-success" value="Войти">
+                        </form>
                         <br>
                         <br>
-                        <a class="btn btn-warning" href="/about">Справка</a>
+                        <a class="btn btn-danger" href="/about">Справка</a>
                     </div>
                 </body>
             </html>"""

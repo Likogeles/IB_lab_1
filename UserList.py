@@ -42,17 +42,21 @@ class UserList:
                 return user
         return None
 
-    def load(self, secret_key: bytes):
-        if not os.path.isfile(self.data_file_name):
-            self._userList.append(User.new_user("ADMIN", "Admin@ya.ru", "", False, True, 0, 0))
-            text = "["
-            for user in self._userList:
-                text += "{" + user.to_json() + "}"
-            text += "]"
-            data = self.encrypt(text, secret_key)
-            with open(self.data_file_name, 'w') as f:
-                f.write(data.decode())
+    def frase_check(self, secret_key: str) -> bool:
+        if len(secret_key) != 16:
+            return False
+        with open(self.data_file_name, 'r') as f:
+            self._userList.clear()
+            file_text = self.decrypt(f.read(), secret_key)
+            print(file_text)
+            with open(self.temp_file_name, 'w') as f:
+                f.write(file_text)
+        text = ""
+        with open(self.temp_file_name, 'r') as f:
+            text = f.read()
+        return '{"login":"ADMIN","email":"Admin@ya.ru","password":"' in text
 
+    def load(self, secret_key: str):
         with open(self.data_file_name, 'r') as f:
             self._userList.clear()
             file_text = self.decrypt(f.read(), secret_key)
@@ -64,14 +68,14 @@ class UserList:
                 last_password_edit: datetime = datetime.strptime(i['last_password_edit'].split()[0], '%Y-%M-%d')
                 password_time: int = int(i['password_time'])
                 self._userList.append(User(i['login'], i['email'], i['password'], is_blocked, is_password_limited, min_password_len, last_password_edit, password_time))
-
         with open(self.temp_file_name, 'w') as f:
             tmp_text = ""
             for i in self._userList:
                 tmp_text += "{" + i.to_json() + "}\n"
             f.write(tmp_text)
+            f.write(tmp_text)
 
-    def save(self, secret_key):
+    def save(self, secret_key: bytes):
         text = "["
         for user in self._userList:
             text += "{" + user.to_json() + "},"
@@ -88,8 +92,8 @@ class UserList:
         ciphertext = cipher.encrypt(text.encode('utf-8'))
         return b64encode(cipher.iv + ciphertext)
 
-    def decrypt(self, ciphertext, key):
+    def decrypt(self, ciphertext, key: str):
         data = b64decode(ciphertext)
-        cipher = AES.new(key, AES.MODE_CFB, iv=data[:16])
+        cipher = AES.new(bytes(key, encoding='utf-8'), AES.MODE_CFB, iv=data[:16])
         decrypted_text = cipher.decrypt(data[16:]).decode('utf-8')
         return decrypted_text
