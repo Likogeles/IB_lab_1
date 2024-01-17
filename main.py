@@ -1,4 +1,6 @@
 import os
+import random
+import secrets
 import sys
 from datetime import datetime
 
@@ -15,7 +17,31 @@ max_password_tries = 3
 password_tries = 0
 pattern = r'(?:\d[^\d]+)*\d(?:[^\d]+\d)*'
 
-secret_key = b"super_secret_key"
+secret_key = b"super_secret_"
+secret_key_filename = "static\secret_key.txt"
+
+
+characters = [
+    *map(chr, range(ord('A'), ord('Z') + 1)),  # Латинские прописные буквы
+    *map(chr, range(ord('a'), ord('z') + 1)),  # Латинские строчные буквы
+    *map(str, range(0, 10)),                   # Цифры
+]
+
+
+if not os.path.isfile(secret_key_filename):
+
+    # full_secret_key = secret_key + bytes(random.choice(characters)+random.choice(characters) + random.choice(characters), encoding='utf-8')
+    full_secret_key = secret_key + secrets.token_bytes(3)
+    print("Ключ сгенерирован")
+    print(full_secret_key)
+    with open(secret_key_filename, 'w') as f:
+        f.write(random.choice(characters)+random.choice(characters) + random.choice(characters))
+
+with open(secret_key_filename, 'r') as f:
+    key_text = f.read()
+
+new_key_text = key_text.encode('utf-8')
+secret_key = secret_key + new_key_text
 
 # userList.load(secret_key)
 
@@ -83,7 +109,11 @@ def index():
             index_errors.append("Введите парольную фразу")
             errors_flag = False
         else:
-            if not userList.frase_check(password_frase_form):
+            try:
+                if not userList.frase_check(password_frase_form):
+                    index_errors.append("Неверная парольная фраза")
+                    errors_flag = False
+            except:
                 index_errors.append("Неверная парольная фраза")
                 errors_flag = False
         if errors_flag:
