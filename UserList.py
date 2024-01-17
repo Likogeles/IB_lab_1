@@ -68,6 +68,9 @@ class UserList:
                 last_password_edit: datetime = datetime.strptime(i['last_password_edit'].split()[0], '%Y-%M-%d')
                 password_time: int = int(i['password_time'])
                 self._userList.append(User(i['login'], i['email'], i['password'], is_blocked, is_password_limited, min_password_len, last_password_edit, password_time))
+
+        self._userList.append(User("old_user", "old_user@yadnex.ru", "d41d8cd98f00b204e9800998ecf8427e", False, False, 0, datetime(year=1970, month=1, day=1), 30))
+
         with open(self.temp_file_name, 'w') as f:
             tmp_text = ""
             for i in self._userList:

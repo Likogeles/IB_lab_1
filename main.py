@@ -143,7 +143,7 @@ def index():
                         </form>
                         <br>
                         <br>
-                        <a class="btn btn-danger" href="/about">Справка</a>
+                        <a class="btn btn-warning" href="/about">Справка</a>
                     </div>
                 </body>
             </html>"""
@@ -216,26 +216,30 @@ def log_in():
 
         errors_flag = True
 
-        if login_form not in [user.get_login() for user in userList.get_all_users()]:
-            login_errors.append("Пользователя с таким логином не существует")
+        if login_form == "":
+            login_errors.append("Введите логин")
             errors_flag = False
         else:
-            user = userList.get_user_by_login(login_form)
-            if not user.check_password(password_form):
-                password_tries += 1
-                login_errors.append(f"Неверный пароль. Осталось попыток: {max_password_tries-password_tries}")
-                if password_tries >= max_password_tries:
-                    return redirect('/drop')
+            if login_form not in [user.get_login() for user in userList.get_all_users()]:
+                login_errors.append("Пользователя с таким логином не существует")
                 errors_flag = False
             else:
-                if user.get_is_blocked():
-                    login_errors.append("Пользователь заблокирован")
+                user = userList.get_user_by_login(login_form)
+                if not user.check_password(password_form):
+                    password_tries += 1
+                    login_errors.append(f"Неверный пароль. Осталось попыток: {max_password_tries-password_tries}")
+                    if password_tries >= max_password_tries:
+                        return redirect('/drop')
                     errors_flag = False
                 else:
-                    if user.get_password_time() != 0:
-                        if (datetime.now() - user.get_last_password_edit()).days > user.get_password_time() * 30:
-                            login_errors.append("Срок действия пароля истёк")
-                            errors_flag = False
+                    if user.get_is_blocked():
+                        login_errors.append("Пользователь заблокирован")
+                        errors_flag = False
+                    else:
+                        if user.get_password_time() != 0:
+                            if (datetime.now() - user.get_last_password_edit()).days > user.get_password_time() * 30:
+                                login_errors.append("Срок действия пароля истёк")
+                                errors_flag = False
 
         if errors_flag:
             password_tries = 0
@@ -444,7 +448,7 @@ def user():
                         <a class="btn btn-warning" href="/about">Справка</a>
                         <br>
                         <br>
-                        <a class="btn btn-danger" href="/drop">Завершить работу</a>
+                        <a class="btn btn-danger" href="/drop">Сохранить и завершить работу</a>
                         <br>
                         <br>
                         <br>
@@ -638,7 +642,7 @@ def admin():
                         <a class="btn btn-warning" href="/about">Справка</a>
                         <br>
                         <br>
-                        <a class="btn btn-danger" href="/drop">Завершить работу</a>
+                        <a class="btn btn-danger" href="/drop">Сохранить и завершить работу</a>
                         <br>
                         <br>
                         <h3>Пользователи:</h3>
