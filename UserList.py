@@ -31,6 +31,12 @@ class UserList:
 
     def add_user(self, user: User):
         self._userList.append(user)
+        os.remove(self.temp_file_name)
+        with open(self.temp_file_name, 'w') as f:
+            tmp_text = ""
+            for i in self._userList:
+                tmp_text += "{" + i.to_json() + "}\n"
+            f.write(tmp_text)
 
     def get_all_users(self) -> list[User]:
         return self._userList
@@ -75,7 +81,6 @@ class UserList:
             tmp_text = ""
             for i in self._userList:
                 tmp_text += "{" + i.to_json() + "}\n"
-            f.write(tmp_text)
             f.write(tmp_text)
 
     def save(self, secret_key: bytes):
